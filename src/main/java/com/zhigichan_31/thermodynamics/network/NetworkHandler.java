@@ -3,7 +3,7 @@ package com.zhigichan_31.thermodynamics.network;
 import com.zhigichan_31.thermodynamics.Thermodynamics;
 import com.zhigichan_31.thermodynamics.data.ModDataAttachments;
 import com.zhigichan_31.thermodynamics.data.PlayerData;
-import com.zhigichan_31.thermodynamics.systems.StaminaManager;
+import com.zhigichan_31.thermodynamics.systems.stamina.StaminaActionsLogic; // Изменили импорт на новый путь
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,10 +35,12 @@ public class NetworkHandler {
         event.registrar(Thermodynamics.MODID).versioned("1.0.0").playToServer(
                 ServerboundAirSwingPayload.TYPE, ServerboundAirSwingPayload.CODEC,
                 (packet, context) -> context.enqueueWork(() -> {
-                    // Код выполняется строго на СЕРВЕРЕ
                     if (context.player() instanceof ServerPlayer serverPlayer) {
-                        // Вызываем обработку взмаха напрямую, минуя тяжелые тики
-                        StaminaManager.processServerSwing(serverPlayer);
+                        PlayerData data = serverPlayer.getData(ModDataAttachments.PLAYER_DATA.get());
+                        StaminaActionsLogic.processServerSwing(serverPlayer, data);
+
+                        // ИСПРАВЛЕНИЕ ТУТ: отправляем изменения обратно на клиент сразу после взмаха в воздух
+                        sendToPlayer(serverPlayer);
                     }
                 })
         );

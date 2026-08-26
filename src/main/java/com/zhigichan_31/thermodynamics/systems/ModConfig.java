@@ -18,11 +18,11 @@ public class ModConfig {
 
     public static final ModConfigSpec.DoubleValue STAMINA_RECOVERY_THRESHOLD;
     public static final ModConfigSpec.IntValue REGEN_COOLDOWN;
-    public static final ModConfigSpec.DoubleValue MOVING_REGEN_MULTIPLIER;
     public static final ModConfigSpec.DoubleValue HUNGER_THIRST_PENALTY;
     public static final ModConfigSpec.DoubleValue MIN_SWING_SCALE_DRAIN;
     public static final ModConfigSpec.DoubleValue EXHAUSTED_MINING_PENALTY;
     public static final ModConfigSpec.DoubleValue EXHAUSTED_ATTACK_PENALTY;
+    public static final ModConfigSpec.DoubleValue EXHAUSTED_ATTACK_PENALTY_SOON;
 
     public static final ModConfigSpec.DoubleValue MAX_CARRY_WEIGHT;
     public static final ModConfigSpec.DoubleValue MAX_SPEED_PENALTY;
@@ -32,25 +32,37 @@ public class ModConfig {
     public static final ModConfigSpec.DoubleValue WEIGHT_SPRINT_DRAIN_IMPACT;
     public static final ModConfigSpec.DoubleValue WEIGHT_REGEN_PENALTY_IMPACT;
 
+    public static final ModConfigSpec.DoubleValue BASE_ITEM_WEIGHT;
+
+
     static {
 
         BUILDER.comment("Настройки системы выносливости (Стамины)").push("stamina");
 
-        SPRINT_DRAIN = BUILDER.comment("Базовая трата стамины при беге (за тик)").defineInRange("sprintDrain", 0.35d, 0.0d, 100.0d);
-        REGEN_BASE = BUILDER.comment("Базовая скорость регенерации стамины").defineInRange("regenBase", 0.8d, 0.0d, 100.0d);
-        BASE_SWING_DRAIN = BUILDER.comment("Трата стамины при взмахе пустой рукой или обычным бытовым предметом (палка, факел)").defineInRange("baseSwingDrain", 1.0d, 0.0d, 100.0d);
+        // Уменьшили с 0.35d до 0.07d (чтобы шкала 20.0 не сгорала за 2 секунды)
+        SPRINT_DRAIN = BUILDER.comment("Базовая трата стамины при беге (за тик)")
+                .defineInRange("sprintDrain", 0.07d, 0.0d, 20.0d);
 
+        // Уменьшили с 0.8d до 0.16d (плавная потиковая регенерация)
+        REGEN_BASE = BUILDER.comment("Базовая скорость регенерации стамины")
+                .defineInRange("regenBase", 0.16d, 0.0d, 20.0d);
+
+        // Уменьшили с 1.0d до 0.2d (замах теперь забирает 1/100 от общего запаса сил, как и раньше)
+        BASE_SWING_DRAIN = BUILDER.comment("Трата стамины при взмахе пустой рукой или обычным бытовым предметом (палка, факел)")
+                .defineInRange("baseSwingDrain", 0.2d, 0.0d, 20.0d);
+
+        // ОСТАВЛЯЕМ 0.15d БЕЗ ИЗМЕНЕНИЙ!
+        // Вы хотели сотые доли и точный расход — теперь 0.15d за тик копания идеально ложится на шкалу 20.0
         BLOCK_BREAK_HARDNESS_MULTIPLIER = BUILDER.comment("Сколько единиц стамины тратится за один тик (1/20 секунды) вскапывания блока.")
-                .defineInRange("blockBreakHardnessMultiplier", 0.15d, 0.0d, 100.0d);
+                .defineInRange("blockBreakHardnessMultiplier", 0.15d, 0.0d, 20.0d);
 
+        // Снизили с 25.0d до 5.0d (это ровно 25% от максимальных 20.0 единиц)
         STAMINA_RECOVERY_THRESHOLD = BUILDER.comment("Порог стамины, который необходимо накопить для выхода из состояния изнурения")
-                .defineInRange("recoveryThreshold", 25.0d, 0.0d, 100.0d);
+                .defineInRange("recoveryThreshold", 5.0d, 0.0d, 20.0d);
 
+        // Кулдаун в тиках не зависит от шкалы, оставляем 15 тиков (0.75 сек)
         REGEN_COOLDOWN = BUILDER.comment("Задержка перед началом регенерации стамины после выполнения действий (в тиках, 20 тиков = 1 сек)")
                 .defineInRange("regenCooldownTicks", 15, 0, 100);
-
-        MOVING_REGEN_MULTIPLIER = BUILDER.comment("Множитель регенерации во время ходьбы/движения игрока (замедление регенерации)")
-                .defineInRange("movingRegenMultiplier", 0.4d, 0.0d, 1.0d);
 
         HUNGER_THIRST_PENALTY = BUILDER.comment("Штраф к скорости регенерации от сильного голода или жажды (0.25 означает -25% к регенерации)")
                 .defineInRange("hungerThirstPenalty", 0.25d, 0.0d, 1.0d);
@@ -58,11 +70,16 @@ public class ModConfig {
         MIN_SWING_SCALE_DRAIN = BUILDER.comment("Минимальный множитель стоимости взмаха при быстром закликивании")
                 .defineInRange("minSwingScaleDrain", 0.5d, 0.0d, 1.0d);
 
-        EXHAUSTED_MINING_PENALTY = BUILDER.comment("Штраф к скорости копания при полной усталости (0.50 означает -50% скорости, 0.80 означает -80% скорости)")
+        EXHAUSTED_MINING_PENALTY = BUILDER.comment("Штраф к скорости копания при полной усталости (0.50 означает -50% скорости)")
                 .defineInRange("exhaustedMiningPenalty", 0.50d, 0.0d, 1.0d);
 
-        EXHAUSTED_ATTACK_PENALTY = BUILDER.comment("Штраф к скорости замаха оружия при полной усталости (0.50 означает -50% скорости атаки, руку поднимает медленнее)")
+        // Этот параметр вы можете оставить, если будете использовать его в WeightManager для других целей,
+        // либо закомментировать, так как из логики атаки стамины мы убрали ванильный дебафф на руку.
+        EXHAUSTED_ATTACK_PENALTY = BUILDER.comment("Штраф к скорости замаха оружия при полной усталости (0.50 означает -50% скорости атаки)")
                 .defineInRange("exhaustedAttackPenalty", 0.50d, 0.0d, 1.0d);
+        EXHAUSTED_ATTACK_PENALTY_SOON = BUILDER.comment("Штраф к утомляющим ударам если персонаж устал (0.5 означает +50% дополнительной траты выносливости)")
+                .defineInRange("exhaustedAttackPenalty", 0.50d, 0.0d, 1.0d);
+
 
         // Дефолтные значения для выносливости оружия
         List<String> defaultWeaponStamina = new ArrayList<>();
@@ -93,6 +110,7 @@ public class ModConfig {
         BUILDER.comment("Настройки переносимого веса").push("weight");
         MAX_CARRY_WEIGHT = BUILDER.comment("Максимальный комфортный вес игрока в кг (100% нагрузки)").defineInRange("maxCarryWeight", 50.0d, 1.0d, 1000.0d);
         MAX_SPEED_PENALTY = BUILDER.comment("Максимальный дебаф скорости перемещения при сильном перегрузе").defineInRange("maxSpeedPenalty", -0.8d, -1.0d, 0.0d);
+        BASE_ITEM_WEIGHT = BUILDER.comment("Default weight for items if not explicitly defined").defineInRange("base_item_weight", 1.0, 0.0, 1000.0);
 
         WEIGHT_SPRINT_DRAIN_IMPACT = BUILDER.comment("Множитель влияния веса на трату стамины при беге. При 1.0 — ванильное влияние. При 0.0 — вес вообще НЕ увеличивает трату стамины.")
                 .defineInRange("weightSprintDrainImpact", 1.0d, 0.0d, 10.0d);

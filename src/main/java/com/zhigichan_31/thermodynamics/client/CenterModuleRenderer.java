@@ -5,68 +5,55 @@ import com.zhigichan_31.thermodynamics.systems.ModConfig;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 
 public class CenterModuleRenderer {
 
-    // КЭШ СТРОК: Создаем массив от 0% до 200%, чтобы Java не создавала новые строки в кадре.
-    // Если вес уйдет выше 200%, код безопасно создаст временную строку.
-    private static final String[] WEIGHT_CACHE = new String[201];
-
-    static {
-        for (int i = 0; i <= 200; i++) {
-            WEIGHT_CACHE[i] = i + "%";
-        }
-    }
+    // КЭШ СТРОК: Создаем массив от 0% до 200%
+    private static final String[] WEIGHT_CACHE = new String[201]; static { for (int i = 0; i <= 200; i++) { WEIGHT_CACHE[i] = i + "%"; } }
 
     public static void render(GuiGraphics graphics, Font font, int centerX, int height, PlayerData data, ResourceLocation texture) {
-        int baseModuleX = centerX - 16;
-        float baseModuleY = height - 65.0f;
+        // ТОЧНЫЕ КООРДИНАТЫ РАЗМЕЩЕНИЯ НА ЭКРАНЕ
+        // ИСПРАВЛЕНО: Сдвинули на 2 пикселя влево (было 96, стало 94) для идеального выравнивания над рамкой
+        int baseModuleX = centerX + 94;
+        int baseModuleY = height - 36;
 
         // Расчет процентов веса
         float maxWeight = ModConfig.MAX_CARRY_WEIGHT.get().floatValue();
         float weightPercentRaw = maxWeight > 0 ? (data.getWeight() / maxWeight) : 0f;
         int weightPercent = (int) (weightPercentRaw * 100f);
 
-        // БЕЗОПАСНОЕ ПОЛУЧЕНИЕ СТРОКИ ИЗ КЭША (0 мс нагрузки)
+        // БЕЗОПАСНОЕ ПОЛУЧЕНИЕ СТРОКИ ИЗ КЭША
         String weightDisplayStr;
         if (weightPercent >= 0 && weightPercent <= 200) {
             weightDisplayStr = WEIGHT_CACHE[weightPercent];
         } else {
-            weightDisplayStr = weightPercent + "%"; // Для экстремальных значений выше 200%
+            weightDisplayStr = weightPercent + "%";
         }
 
-        // НАЧАЛО ОТРИСОВКИ БЛОКА
+        // НАЧАЛО ОТРИСОВКИ СИСТЕМЫ ВЕСА
         graphics.pose().pushPose();
-        graphics.pose().translate(baseModuleX + 0.5f, baseModuleY, 0);
+        graphics.pose().translate(baseModuleX, baseModuleY, 0);
 
-        // СЛОЙ 1: Задняя цветная шкала барабана
-        graphics.blit(texture, 0, 0, 32.0F, 64.0F, 32, 32, 256, 256);
+        // ОТРИСОВКА ВАШЕЙ ФИКСИРОВАННОЙ ТЕКСТУРЫ (U=0, V=121, Ширина=23, Высота=15)
+        graphics.blit(texture, 0, 0, 0.0F, 121.0F, 23, 15, 256, 256);
 
-        // СЛОЙ 2: Полосочка-стрелка прибора (Оставляем, она теперь "легкая")
-        float weightAngle = Mth.clamp(-90.0f + (Math.min(1.0f, weightPercentRaw) * 180.0f), -90.0f, 90.0f);
-
+        // ИСПРАВЛЕНО: ТОЧНАЯ ЦЕНТРОВКА ЦИФР ПРОЦЕНТОВ ПО ОСЯМ X И Y
         graphics.pose().pushPose();
-        graphics.pose().translate(16.0f, 19.5f, 0.0f);
-        graphics.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(weightAngle));
-        graphics.pose().scale(1.0f, 1.5f, 1.0f);
-        graphics.pose().translate(-0.5f, -10.0f, 0.0f);
-        graphics.blit(texture, 0, 0, 72.0F, 68.0F, 1, 10, 256, 256);
-        graphics.pose().popPose();
 
-        // СЛОЙ 3: Металлическая подложка гири
-        graphics.blit(texture, 0, 0, 0.0F, 64.0F, 32, 32, 256, 256);
-
-        // СЛОЙ 5: ЦИФРЫ ПРОЦЕНТОВ
-        graphics.pose().pushPose();
-        graphics.pose().translate(16.0f, 3.5f, 0.0f);
+        // Масштаб шрифта 0.55f уменьшает стандартную высоту букв (9 пикселей) примерно до 5 пикселей.
+        // Чтобы отцентрировать их внутри плашки высотой 15 пикселей:
+        // По X: Ровно середина плашки (23 / 2 = 11.5f).
+        // По Y: Опускаем на 5.2f пикселей, чтобы текст лежал идеально по центру синего поля.
+        graphics.pose().translate(11.5f, 7.2f, 0.0f);
         graphics.pose().scale(0.55f, 0.55f, 1.0f);
 
-        // font.width() тоже может быть тяжелым, но без создания новых строк он работает быстро
+        // Вычисляем половину ширины текста с учётом масштаба для центровки по оси X
         int textOffsetX = -(font.width(weightDisplayStr) / 2);
+
+        // Рендерим текст с тенью ровно по центру плашки
         graphics.drawString(font, weightDisplayStr, textOffsetX, 0, 0xFFFFFF, true);
         graphics.pose().popPose();
 
-        graphics.pose().popPose(); // КОНЕЦ ОТРИСОВКИ БЛОКА
+        graphics.pose().popPose(); // КОНЕЦ ОТРИСОВКИ
     }
 }

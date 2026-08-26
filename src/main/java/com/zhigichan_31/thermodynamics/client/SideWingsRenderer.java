@@ -49,52 +49,42 @@ public class SideWingsRenderer {
     // ЛЕВАЯ ПАНЕЛЬ GUI (ЗДОРОВЬЕ И СТАМИНА)
     // ==========================================
     public static void renderLeft(GuiGraphics g, Font f, LocalPlayer p, int lX, int bY, int tY, PlayerData d, ResourceLocation tex) {
-        float hp = p.getHealth(), max = p.getMaxHealth(), abs = p.getAbsorptionAmount();
+        float hp = p.getHealth();
+        float max = p.getMaxHealth();
+        float abs = p.getAbsorptionAmount();
         double off = -50.0;
 
         try {
             var att = net.neoforged.neoforge.registries.NeoForgeRegistries.ATTACHMENT_TYPES.get(ResourceLocation.fromNamespaceAndPath("cold_sweat", "entity_temperature"));
             if (att != null && p.hasData(att)) {
                 Object obj = p.getData(att);
-
                 if (!COLD_SWEAT_REF_CHECKED) {
-                    try {
-                        COLD_SWEAT_GET_TRAITS = obj.getClass().getMethod("getTraits");
-                    } catch (Exception ignored) {}
+                    try { COLD_SWEAT_GET_TRAITS = obj.getClass().getMethod("getTraits"); } catch (Exception ignored) {}
                     COLD_SWEAT_REF_CHECKED = true;
                 }
-
                 if (COLD_SWEAT_GET_TRAITS != null) {
                     Map<?, ?> m = (Map<?, ?>) COLD_SWEAT_GET_TRAITS.invoke(obj);
                     if (m != null && !m.isEmpty()) {
                         Object k = null;
-                        for (Object key : m.keySet()) {
-                            if ("CORE".equals(key.toString())) {
-                                k = key;
-                                break;
-                            }
-                        }
-                        if (k != null && m.get(k) instanceof Number n) {
-                            off = n.doubleValue() - 50.0;
-                        }
+                        for (Object key : m.keySet()) { if ("CORE".equals(key.toString())) { k = key; break; } }
+                        if (k != null && m.get(k) instanceof Number n) { off = n.doubleValue() - 50.0; }
                     }
                 }
             }
         } catch (Exception ignored) {}
 
         g.pose().pushPose();
-        g.pose().translate(lX, 0, 0);
+        g.pose().translate(lX + 12, 0, 0);
         g.blit(tex, 0, bY, 0.0F, 0.0F, 81, 9, 256, 256);
-        float hU = 1.0F, hV = 19.0F;
-        int hH = 7, hX = 1, hY = 1, mW = 79;
+
+        float hU = 1.0F; float hV = 19.0F; int hH = 7; int hX = 1; int hY = 1; int mW = 79;
         boolean db = p.hasEffect(MobEffects.POISON) || p.hasEffect(MobEffects.WITHER);
-        if (p.hasEffect(MobEffects.POISON)) {
-            hU = 81.0F; hV = 9.0F; hH = 9; hX = 0; hY = 0; mW = 81;
-        } else if (p.hasEffect(MobEffects.WITHER)) {
-            hU = 81.0F; hV = 18.0F; hH = 9; hX = 0; hY = 0; mW = 81;
-        }
+        if (p.hasEffect(MobEffects.POISON)) { hU = 81.0F; hV = 9.0F; hH = 9; hX = 0; hY = 0; mW = 81; }
+        else if (p.hasEffect(MobEffects.WITHER)) { hU = 81.0F; hV = 18.0F; hH = 9; hX = 0; hY = 0; mW = 81; }
+
         int hW = (int) (mW * (hp / max));
         if (hW > 0) g.blit(tex, hX, bY + hY, hU, hV, hW, hH, 256, 256);
+
         if (!db) {
             int mpW = (int) (81 * (hp / max));
             if (off <= -100.0) {
@@ -105,19 +95,23 @@ public class SideWingsRenderer {
                 if (hFill > 0) g.blit(tex, 0, bY, 81.0F, 36.0F, hFill, 9, 256, 256);
             }
         }
+
         if (abs > 0.0f) {
             int aW = (int) (81 * Math.max(0.0f, Math.min(1.0f, abs / max)));
             if (aW > 0) g.blit(tex, 0, bY, 81.0F, 45.0F, aW, 9, 256, 256);
         }
+
         int arm = p.getArmorValue();
         if (arm > 0) {
             int arW = (int) (81 * Math.max(0.0f, Math.min(1.0f, (float) arm / 20.0f)));
             if (arW > 0) g.blit(tex, 0, bY, 81.0F, 0.0F, arW, 9, 256, 256);
         }
+
         g.blit(tex, 0, tY, 0.0F, 0.0F, 81, 9, 256, 256);
 
+        // МАТЕМАТИКА ПОД СИСТЕМУ 20.0 ОЧКОВ
         float staminaVal = d.getStamina();
-        int sW = (int) (79 * Math.max(0.0f, Math.min(1.0f, staminaVal / 100.0f)));
+        int sW = (int) (79 * Math.max(0.0f, Math.min(1.0f, staminaVal / 20.0f)));
         if (sW > 0) {
             if (d.isExhausted()) g.setColor(0.45F, 0.45F, 0.45F, 1.0F);
             g.blit(tex, 1, tY + 1, 1.0F, 46.0F, sW, 7, 256, 256);
@@ -125,44 +119,43 @@ public class SideWingsRenderer {
         }
         g.pose().popPose();
 
-        int staminaInt = (int) staminaVal;
-        String sStr = (staminaInt >= 0 && staminaInt <= 100) ? STAMINA_CACHE[staminaInt] : (staminaInt + "%");
+        // Строка текста теперь выводит формат "20.0 / 20" вместо сломанных процентов
+        String sStr = String.format(java.util.Locale.ROOT, "%.1f / 20", staminaVal);
 
         StringBuilder hpBuilder = new StringBuilder();
         hpBuilder.append(String.format(java.util.Locale.ROOT, "%.1f", hp));
-        if (abs > 0.0f) {
-            hpBuilder.append("(+").append((int)abs).append(")");
-        }
+        if (abs > 0.0f) { hpBuilder.append("(+").append((int)abs).append(")"); }
         hpBuilder.append(" / ").append((int)max);
         String hpStr = hpBuilder.toString();
 
         g.pose().pushPose();
-        g.pose().translate(lX, tY + 2, 0);
+        g.pose().translate(lX + 12, tY + 2, 0);
         g.pose().scale(0.66f, 0.66f, 1.0f);
         g.drawString(f, sStr, (int) (((81 - (f.width(sStr) * 0.66f)) / 2) / 0.66f), 0, d.isExhausted() ? 0xFF555555 : 0xFFFFFF, true);
         g.pose().popPose();
 
         g.pose().pushPose();
-        g.pose().translate(lX, bY + 2, 0);
+        g.pose().translate(lX + 12, bY + 2, 0);
         g.pose().scale(0.66f, 0.66f, 1.0f);
         g.drawString(f, hpStr, (int) (((81 - (f.width(hpStr) * 0.66f)) / 2) / 0.66f) + 1, 0, 0xFFFFFF, true);
         g.pose().popPose();
 
         if (arm > 0) {
             g.pose().pushPose();
-            g.pose().translate(lX, bY + 2, 0);
+            g.pose().translate(lX + 12, bY + 2, 0);
             g.pose().scale(0.66f, 0.66f, 1.0f);
             String aStr = "[🛡" + arm + "]";
             g.drawString(f, aStr, -(f.width(aStr) + 4), 0, 0xDDDDDD, true);
             g.pose().popPose();
         }
     }
+
     // ==========================================
     // ПРАВАЯ ПАНЕЛЬ GUI (ГОЛОД И ЖАЖДА)
     // ==========================================
     public static void renderRight(GuiGraphics g, Font f, LocalPlayer p, int rX, int bY, int tY, int aY, ResourceLocation tex) {
         g.pose().pushPose();
-        g.pose().translate(rX, 0, 0);
+        g.pose().translate(rX - 12, 0, 0);
         g.blit(tex, 0, bY, 0.0F, 0.0F, 81, 9, 256, 256);
         int fL = p.getFoodData().getFoodLevel();
         float fPct = Math.max(0.0f, Math.min(1.0f, fL / 20.0f));
@@ -244,14 +237,14 @@ public class SideWingsRenderer {
         String fStr = (fL >= 0 && fL <= 20) ? FOOD_CACHE[fL] : (fL + " / 20");
 
         g.pose().pushPose();
-        g.pose().translate(rX, tY + 2, 0);
+        g.pose().translate(rX - 12, tY + 2, 0);
         g.pose().scale(0.66f, 0.66f, 1.0f);
         g.drawString(f, tStr, (int) (((81 - (f.width(tStr) * 0.66f)) / 2) / 0.66f), 0, 0xFFFFFF, true);
         g.pose().popPose();
 
         if (tS > 0.0f) {
             g.pose().pushPose();
-            g.pose().translate(rX, tY + 2, 0);
+            g.pose().translate(rX - 12, tY + 2, 0);
             g.pose().scale(0.66f, 0.66f, 1.0f);
             String tsS = "[💧+" + String.format(java.util.Locale.ROOT, "%.1f", tS) + "]";
             g.drawString(f, tsS, (int) (83 / 0.66f), 0, 0x55FFFF, true);
@@ -259,14 +252,14 @@ public class SideWingsRenderer {
         }
 
         g.pose().pushPose();
-        g.pose().translate(rX, bY + 2, 0);
+        g.pose().translate(rX - 12, bY + 2, 0);
         g.pose().scale(0.66f, 0.66f, 1.0f);
         g.drawString(f, fStr, (int) (((81 - (f.width(fStr) * 0.66f)) / 2) / 0.66f), 0, 0xFFFFFF, true);
         g.pose().popPose();
 
         if (fS > 0.0f) {
             g.pose().pushPose();
-            g.pose().translate(rX, bY + 2, 0);
+            g.pose().translate(rX - 12, bY + 2, 0);
             g.pose().scale(0.66f, 0.66f, 1.0f);
             String fsS = "[🍖+" + (int)fS + "]";
             g.drawString(f, fsS, (int) (83 / 0.66f), 0, 0xFFDD55, true);
@@ -275,7 +268,7 @@ public class SideWingsRenderer {
 
         if (aS < mI) {
             g.pose().pushPose();
-            g.pose().translate(rX, aY + 2, 0);
+            g.pose().translate(rX - 12, aY + 2, 0);
             g.pose().scale(0.66f, 0.66f, 1.0f);
             String aStr = "🫧 " + (int) (((float) aS / mI) * 100f) + "%";
             g.drawString(f, aStr, (int) (((81 - (f.width(aStr) * 0.66f)) / 2) / 0.66f), 0, 0x88FFFF, true);

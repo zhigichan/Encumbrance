@@ -15,7 +15,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 @EventBusSubscriber(modid = Thermodynamics.MODID, value = Dist.CLIENT)
 public class ClientStaminaHandler {
 
-    // Флаг блокировки спринта до тех пор, пока кнопка зажата
+    // Флаг блокировки спринта
     private static boolean isSprintBlocked = false;
 
     @SubscribeEvent
@@ -24,35 +24,39 @@ public class ClientStaminaHandler {
         if (basePlayer instanceof LocalPlayer player) {
             PlayerData data = player.getData(ModDataAttachments.PLAYER_DATA.get());
 
-            boolean isSprintKeyPressed = Minecraft.getInstance().options.keySprint.isDown();
+            Minecraft mc = Minecraft.getInstance();
+            boolean isSprintKeyPressed = mc.options.keySprint.isDown();
 
-            // Если стамина закончилась — включаем блокировку
+            // Проверяем, жмет ли игрок движение вперед (через импульс ввода)
+            boolean hasForwardImpulse = player.input.hasForwardImpulse();
+
+            // 1. Возвращено: Жестко блокируем спринт строго при достижении нуля
             if (data.getStamina() <= 0.0f) {
                 isSprintBlocked = true;
             }
 
-            // Если спринт заблокирован и игрок ВСЁ ЕЩЕ держит кнопку
-            if (isSprintBlocked && isSprintKeyPressed) {
-                // Принудительно гасим статус бега у игрока
+            // 2. Если спринт заблокирован, принудительно гасим его
+            if (isSprintBlocked) {
                 if (player.isSprinting()) {
                     player.setSprinting(false);
                 }
-                // Аппаратно отжимаем кнопку бега в настройках
-                Minecraft.getInstance().options.keySprint.setDown(false);
+                // Отключаем ванильный триггер удержания кнопки бега
+                if (isSprintKeyPressed) {
+                    mc.options.keySprint.setDown(false);
+                }
             }
 
-            // Сбрасываем блокировку, только когда игрок полностью ОТПУСТИЛ кнопку бега
-            if (!isSprintKeyPressed) {
+            // 3. Возвращено: Сбрасываем блокировку, если отжата кнопка спринта ИЛИ если игрок перестал бежать вперед (отпустил W)
+            if (!isSprintKeyPressed || !hasForwardImpulse) {
                 isSprintBlocked = false;
             }
         }
     }
+
     @SubscribeEvent
     public static void onClientAirClick(PlayerInteractEvent.LeftClickEmpty event) {
         if (event.getEntity() instanceof net.minecraft.client.player.LocalPlayer player) {
-            // Проверяем, что игрок НЕ в креативе и НЕ в наблюдателе (значит, он в выживании/приключении)
             if (!player.isCreative() && !player.isSpectator()) {
-                // Мгновенно шлём пакет на сервер при клике по воздуху
                 net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.zhigichan_31.thermodynamics.network.ServerboundAirSwingPayload());
             }
         }

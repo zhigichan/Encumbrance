@@ -2,6 +2,8 @@ modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
 
+
+
 [[mods]]
 modId="thermodynamics"
 version="${mod_version}"
@@ -46,16 +48,10 @@ versionRange="[1.21.1,)"
 ordering="AFTER"
 side="BOTH"
 
-[[dependencies.thermodynamics]]
-modId="thirstwastaken"
-type="optional"
-versionRange="[2.1.5,)"
-ordering="AFTER"
-side="BOTH"
 
 [[dependencies.thermodynamics]]
 modId="coldsweat"
 type="optional"
-versionRange="[2.4.1,)"
+versionRange="[2.4.2,)"
 ordering="AFTER"
 side="BOTH"
