@@ -1,0 +1,9 @@
+{
+  "quark:backpack": 2.0,
+  "minecraft:anvil": 10.0,
+  "minecraft:chipped_anvil": 10.0,
+  "minecraft:damaged_anvil": 10.0,
+  "#minecraft:logs": 0.4,
+  "#c:ingots": 0.5,
+  "#c:storage_blocks": 2.0
+}

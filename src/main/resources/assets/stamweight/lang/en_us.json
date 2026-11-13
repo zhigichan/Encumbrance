@@ -1,0 +1,13 @@
+{
+  "itemGroup.stamweight": "Example Mod Tab",
+  "block.stamweight.example_block": "Example Block",
+  "item.stamweight.example_item": "Example Item",
+
+  "stamweight.configuration.title": "Stamina & Weight Configs",
+  "stamweight.configuration.section.stamweight.common.toml": "Stamina & Weight Configs",
+  "stamweight.configuration.section.stamweight.common.toml.title": "Stamina & Weight Configs",
+  "stamweight.configuration.items": "Item List",
+  "stamweight.configuration.logDirtBlock": "Log Dirt Block",
+  "stamweight.configuration.magicNumberIntroduction": "Magic Number Text",
+  "stamweight.configuration.magicNumber": "Magic Number"
+}

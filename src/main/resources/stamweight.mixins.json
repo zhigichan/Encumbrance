@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "com.zhigichan.stamweight.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ModifierPacketHungry",
+    "InventoryChangeMixin",
+    "PlayerMixin",
+    "LivingEntityJumpMixin",
+    "ServerPlayerGameModeMixin",
+    "ServerboundSwingPacketMixin",
+    "ServerGamePacketListenerMixin",
+    "ContainerClickMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "minecraft:netherite_axe": 5.5,
+  "minecraft:trident": 4.0,
+  "minecraft:mace": 6.0,
+  "#minecraft:swords": 3.0,
+  "#minecraft:axes": 4.5,
+  "#minecraft:pickaxes": 2.5,
+  "#minecraft:shovels": 2.0,
+  "#minecraft:hoes": 1.5,
+  "#c:swords": 1.5
+}
