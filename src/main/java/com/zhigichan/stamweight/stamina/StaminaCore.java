@@ -19,8 +19,6 @@ public class StaminaCore {
             return;
         }
 
-        WeightStaminaLink.tickSurvivalCheck(player);
-
         boolean isSprinting = player.isSprinting();
         boolean isWalking = StaminaStorage.isWalking(player);
 

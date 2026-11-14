@@ -26,7 +26,7 @@ public class ModAttributes {
     // Атрибут 3: общий множитель регенерации и расхода стамины (база 1.0)
     public static final DeferredHolder<Attribute, Attribute> STAMINA_RATE = ATTRIBUTES.register(
             "stamina_rate",
-            () -> new RangedAttribute("attribute.name.stamina_rate", 1.0D, 0.0D, 20.0D).setSyncable(true)
+            () -> new RangedAttribute("attribute.name.stamina_rate", 1.0D, -1000.0D, 1000.0D).setSyncable(true)
     );
 
     public static final DeferredHolder<Attribute, Attribute> MAX_STAMINA = ATTRIBUTES.register(

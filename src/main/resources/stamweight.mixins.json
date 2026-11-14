@@ -10,7 +10,9 @@
     "ServerPlayerGameModeMixin",
     "ServerboundSwingPacketMixin",
     "ServerGamePacketListenerMixin",
-    "ContainerClickMixin"
+    "ContainerClickMixin",
+    "FoodDataMixin",
+    "ThirstDataMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -12,8 +12,6 @@ public class StamWeightData {
     // Константа максимального объёма шкалы атаки (20.0 очков)
     public static final float MAX_STAMINA = 20.0f;
 
-    public static final float MAX_WEIGHT = 20.0f;
-
 
     // --- Выносливость движения в оперативной памяти (RAM, не пишется в NBT) ---
     public static final double DEFAULT_ENDURANCE = 20.0;

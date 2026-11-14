@@ -19,7 +19,6 @@ import java.util.WeakHashMap;
 
 public class WeightCalc {
 
-    public static float MAX_SLOT_STACK_WEIGHT = 10.0f;
     public static float DEFAULT_CONTAINER_MODIFIER = 1.0f;
 
     public static final Map<ResourceLocation, Float> ITEM_ID_WEIGHTS = new LinkedHashMap<>();
@@ -59,7 +58,7 @@ public class WeightCalc {
         }
 
         float unitWeight = getSingleItemBaseWeight(stack);
-        float selfWeight = Math.min(MAX_SLOT_STACK_WEIGHT, unitWeight * stack.getCount());
+        float selfWeight = unitWeight * stack.getCount();
 
         ItemContainerContents container = stack.get(DataComponents.CONTAINER);
         if (container != null) {

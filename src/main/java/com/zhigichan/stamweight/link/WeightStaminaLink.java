@@ -18,18 +18,9 @@ import java.lang.reflect.Method;
 public class WeightStaminaLink {
 
     public static boolean USE_DYNAMIC_SCALING = true;
-    public static boolean EMACIATION_EXTRA_DEBUFF = false;
-
-    public static int SURVIVAL_CHECK_INTERVAL = 20;
 
     public static final float OVERLOAD_START_PERCENT = 100.0f;
     public static final float STEP_PERCENT = 25.0f;
-
-    public static final double FATIGUE_MINING_PENALTY = -0.50;
-    public static final double FATIGUE_ATTACK_RECHARGE_PENALTY = -0.50;
-
-    public static final double EMACIATION_MINING_PENALTY = -0.75;
-    public static final double EMACIATION_ATTACK_RECHARGE_PENALTY = -0.75;
 
     public static final int SURVIVAL_THRESHOLD_LEVEL = 6;
 
@@ -62,6 +53,8 @@ public class WeightStaminaLink {
     private static Method cachedGetThirstMethod = null;
     private static boolean thirstLookupFailed = false;
 
+    private static AttachmentType<?> cachedThirstType = null;
+
     public static void onWeightUpdated(ServerPlayer player, float currentWeight) {
         float maxWeight = (float) Math.max(1.0, player.getAttributeValue(ModAttributes.MAX_WEIGHT));
         float weightPercent = (currentWeight / maxWeight) * 100.0f;
@@ -72,13 +65,7 @@ public class WeightStaminaLink {
         updateOverloadAttributes(player, overloadRatio);
     }
 
-    public static void tickSurvivalCheck(ServerPlayer player) {
-        if (SURVIVAL_CHECK_INTERVAL > 1) {
-            if ((player.getId() % SURVIVAL_CHECK_INTERVAL) != (player.tickCount % SURVIVAL_CHECK_INTERVAL)) {
-                return;
-            }
-        }
-
+    public static void onSurvivalStatChanged(ServerPlayer player) {
         int currentFood = player.getFoodData().getFoodLevel();
         int currentThirst = getPlayerThirst(player);
 
@@ -93,6 +80,7 @@ public class WeightStaminaLink {
         applySurvivalPenalties(player, currentFood, currentThirst);
     }
 
+
     public static void updateFatigueDebuffs(ServerPlayer player) {
         boolean isEmaciated = StaminaStorage.isEmaciated(player);
         boolean isFatigued = StaminaStorage.isFatigued(player);
@@ -106,12 +94,21 @@ public class WeightStaminaLink {
             return;
         }
 
-        boolean useStrongPenalty = isEmaciated && EMACIATION_EXTRA_DEBUFF;
-        double miningPenalty = useStrongPenalty ? EMACIATION_MINING_PENALTY : FATIGUE_MINING_PENALTY;
-        double attackPenalty = useStrongPenalty ? EMACIATION_ATTACK_RECHARGE_PENALTY : FATIGUE_ATTACK_RECHARGE_PENALTY;
+        boolean useStrongPenalty = isEmaciated && StamWeightConfig.FATIGUE_2_ENABLED.get();
 
-        applyPercentModifierIfChanged(miningAttr, FATIGUE_MINING_ID, miningPenalty);
-        applyPercentModifierIfChanged(attackRechargeAttr, FATIGUE_ATTACK_ID, attackPenalty);
+        double miningMult = useStrongPenalty
+                ? StamWeightConfig.FATIGUE_2_MINING_MULTIPLIER.get()
+                : StamWeightConfig.FATIGUE_1_MINING_MULTIPLIER.get();
+
+        double attackMult = useStrongPenalty
+                ? StamWeightConfig.FATIGUE_2_ATTACK_RECHARGE_MULTIPLIER.get()
+                : StamWeightConfig.FATIGUE_1_ATTACK_RECHARGE_MULTIPLIER.get();
+
+        double miningDelta = miningMult - 1.0;
+        double attackDelta = attackMult - 1.0;
+
+        applyPercentModifierIfChanged(miningAttr, FATIGUE_MINING_ID, miningDelta);
+        applyPercentModifierIfChanged(attackRechargeAttr, FATIGUE_ATTACK_ID, attackDelta);
     }
 
     private static void applySurvivalPenalties(ServerPlayer player, int food, int thirst) {
@@ -255,19 +252,29 @@ public class WeightStaminaLink {
                 AttributeModifier.Operation.ADD_VALUE
         ));
     }
+
     private static int getPlayerThirst(ServerPlayer player) {
         if (thirstLookupFailed) {
             return -1;
         }
         try {
-            AttachmentType<?> thirstType = NeoForgeRegistries.ATTACHMENT_TYPES.get(TWT_THIRST_ID);
-            if (thirstType == null || !player.hasData(thirstType)) {
+            if (cachedThirstType == null) {
+                cachedThirstType = NeoForgeRegistries.ATTACHMENT_TYPES.get(TWT_THIRST_ID);
+                if (cachedThirstType == null) {
+                    thirstLookupFailed = true;
+                    return -1;
+                }
+            }
+
+            if (!player.hasData(cachedThirstType)) {
                 return -1;
             }
-            Object thirstCap = player.getData(thirstType);
+
+            Object thirstCap = player.getData(cachedThirstType);
             if (cachedGetThirstMethod == null) {
                 cachedGetThirstMethod = thirstCap.getClass().getMethod("getThirst");
             }
+
             Object result = cachedGetThirstMethod.invoke(thirstCap);
             if (result instanceof Number num) {
                 return num.intValue();

@@ -29,6 +29,15 @@ public class StamWeightConfig {
     public static final ModConfigSpec.DoubleValue OVERLOAD_GRAVITY_PERCENT;
     public static final ModConfigSpec.DoubleValue OVERLOAD_SPEED_PERCENT;
 
+    // --- [fatigue_1] ---
+    public static final ModConfigSpec.DoubleValue FATIGUE_1_MINING_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue FATIGUE_1_ATTACK_RECHARGE_MULTIPLIER;
+
+    // --- [fatigue_2] ---
+    public static final ModConfigSpec.BooleanValue FATIGUE_2_ENABLED;
+    public static final ModConfigSpec.DoubleValue FATIGUE_2_MINING_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue FATIGUE_2_ATTACK_RECHARGE_MULTIPLIER;
+
     static {
         // [стамина]
         BUILDER.push("stamina");
@@ -87,6 +96,29 @@ public class StamWeightConfig {
         OVERLOAD_SPEED_PERCENT = BUILDER
                 .comment("Настройка снижения скорости передвижения на промежуток 100% в виде процента (дефолт 0.05 = -5%)")
                 .defineInRange("speedPercent", 0.05, 0.0, 0.99);
+        BUILDER.pop();
+
+        // [дебаф при усталости 1]
+        BUILDER.push("fatigue_1");
+        FATIGUE_1_MINING_MULTIPLIER = BUILDER
+                .comment("Процентный множитель скорости копания (дефолт 0.5)")
+                .defineInRange("miningMultiplier", 0.5, 0.0, 10.0);
+        FATIGUE_1_ATTACK_RECHARGE_MULTIPLIER = BUILDER
+                .comment("Процентный множитель скорости перезарядки (дефолт 0.5)")
+                .defineInRange("attackRechargeMultiplier", 0.5, 0.0, 10.0);
+        BUILDER.pop();
+
+        // [дебаф от усталости 2]
+        BUILDER.push("fatigue_2");
+        FATIGUE_2_ENABLED = BUILDER
+                .comment("Включить ли изменённые параметры для этого дебаффа? (дефолт false)")
+                .define("enabled", false);
+        FATIGUE_2_MINING_MULTIPLIER = BUILDER
+                .comment("Процентный множитель скорости копания (дефолт 0.75)")
+                .defineInRange("miningMultiplier", 0.75, 0.0, 10.0);
+        FATIGUE_2_ATTACK_RECHARGE_MULTIPLIER = BUILDER
+                .comment("Процентный множитель скорости атаки / перезарядки (дефолт 0.75)")
+                .defineInRange("attackRechargeMultiplier", 0.75, 0.0, 10.0);
         BUILDER.pop();
 
         SPEC = BUILDER.build();
