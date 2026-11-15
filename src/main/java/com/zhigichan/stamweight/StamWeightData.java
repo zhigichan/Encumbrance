@@ -33,11 +33,6 @@ public class StamWeightData {
     private transient int lastSyncedCur = -1;
     private transient int lastSyncedMax = -1;
 
-    private transient double survivalActionMultiplier = 1.0;
-
-    public double getSurvivalActionMultiplier() { return this.survivalActionMultiplier; }
-    public void setSurvivalActionMultiplier(double multiplier) { this.survivalActionMultiplier = multiplier; }
-
     public int getLastFoodLevel() { return this.lastFoodLevel; }
     public void setLastFoodLevel(int food) { this.lastFoodLevel = food; }
 
