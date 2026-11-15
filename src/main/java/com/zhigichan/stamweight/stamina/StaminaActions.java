@@ -67,6 +67,7 @@ public class StaminaActions {
         if (amount <= 0.0) return;
 
         StamWeightData data = player.getData(StamWeight.PLAYER_DATA);
+        amount *= data.getSurvivalActionMultiplier();
 
         double maxStamina = Math.max(WeightStaminaLink.MIN_MAX_STAMINA, player.getAttributeValue(ModAttributes.MAX_STAMINA));
         double currentStamina = Math.max(0.0, data.getEndurance() - amount);

@@ -114,12 +114,15 @@ public class WeightStaminaLink {
     private static void applySurvivalPenalties(ServerPlayer player, int food, int thirst) {
         double rateFlatDelta = 0.0;
         double maxBarrelPenalty = 0.0;
+        double actionMult = 1.0;
 
         double cfgRegenDelta = StamWeightConfig.SURVIVAL_REGEN_DELTA.get(); // -0.15
         double cfgStaminaPerPoint = StamWeightConfig.SURVIVAL_STAMINA_PER_POINT.get(); // -0.2
+        double cfgActionMult = StamWeightConfig.SURVIVAL_ACTION_COST_MULTIPLIER.get(); // 1.25
 
         if (food <= SURVIVAL_THRESHOLD_LEVEL) {
             rateFlatDelta += cfgRegenDelta;
+            actionMult += (cfgActionMult - 1.0);
             if (food < SURVIVAL_THRESHOLD_LEVEL) {
                 maxBarrelPenalty += (SURVIVAL_THRESHOLD_LEVEL - Math.max(0, food)) * cfgStaminaPerPoint;
             }
@@ -127,10 +130,14 @@ public class WeightStaminaLink {
 
         if (thirst >= 0 && thirst <= SURVIVAL_THRESHOLD_LEVEL) {
             rateFlatDelta += cfgRegenDelta;
+            actionMult += (cfgActionMult - 1.0);
             if (thirst < SURVIVAL_THRESHOLD_LEVEL) {
                 maxBarrelPenalty += (SURVIVAL_THRESHOLD_LEVEL - Math.max(0, thirst)) * cfgStaminaPerPoint;
             }
         }
+
+        // Сохраняем итоговый множитель траты на замахи и копание в память игрока (RAM)
+        player.getData(StamWeight.PLAYER_DATA).setSurvivalActionMultiplier(Math.max(0.0, actionMult));
 
         AttributeInstance rateAttr = player.getAttribute(ModAttributes.STAMINA_RATE);
         if (rateAttr != null) {
@@ -152,6 +159,7 @@ public class WeightStaminaLink {
 
         syncBarrelAndCheckEmaciation(player);
     }
+
 
     private static void updateOverloadAttributes(ServerPlayer player, double overloadRatio) {
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
@@ -233,7 +241,7 @@ public class WeightStaminaLink {
         if (existing != null && existing.amount() == roundedDelta) {
             return;
         }
-        attr.addOrReplacePermanentModifier(new AttributeModifier(
+        attr.addOrUpdateTransientModifier(new AttributeModifier(
                 id,
                 roundedDelta,
                 AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
@@ -246,7 +254,7 @@ public class WeightStaminaLink {
         if (existing != null && existing.amount() == roundedDelta) {
             return;
         }
-        attr.addOrReplacePermanentModifier(new AttributeModifier(
+        attr.addOrUpdateTransientModifier(new AttributeModifier(
                 id,
                 roundedDelta,
                 AttributeModifier.Operation.ADD_VALUE

@@ -15,12 +15,11 @@ public class StamWeightData {
 
     // --- Выносливость движения в оперативной памяти (RAM, не пишется в NBT) ---
     public static final double DEFAULT_ENDURANCE = 20.0;
-    private transient double endurance = DEFAULT_ENDURANCE;
+    private double endurance = DEFAULT_ENDURANCE;
     private transient double maxEndurance = DEFAULT_ENDURANCE;
     private transient double weightMaxPenalty = 0.0;
     private transient int enduranceCooldown = 0;
 
-    private transient double survivalMaxPenalty = 0.0;
     private transient int lastFoodLevel = -1;
     private transient int lastThirstLevel = -1;
 
@@ -34,8 +33,10 @@ public class StamWeightData {
     private transient int lastSyncedCur = -1;
     private transient int lastSyncedMax = -1;
 
-    public double getSurvivalMaxPenalty() { return this.survivalMaxPenalty; }
-    public void setSurvivalMaxPenalty(double penalty) { this.survivalMaxPenalty = penalty; }
+    private transient double survivalActionMultiplier = 1.0;
+
+    public double getSurvivalActionMultiplier() { return this.survivalActionMultiplier; }
+    public void setSurvivalActionMultiplier(double multiplier) { this.survivalActionMultiplier = multiplier; }
 
     public int getLastFoodLevel() { return this.lastFoodLevel; }
     public void setLastFoodLevel(int food) { this.lastFoodLevel = food; }
@@ -48,9 +49,10 @@ public class StamWeightData {
         this.currentStamina = MAX_STAMINA;
     }
 
-    public StamWeightData(float currentWeight, float currentStamina) {
+    public StamWeightData(float currentWeight, float currentStamina, double endurance) {
         this.currentWeight = currentWeight;
         this.currentStamina = currentStamina;
+        this.endurance = endurance;
     }
 
     // 👑 МЕТОДЫ ШКАЛЫ АТАКИ
@@ -106,7 +108,8 @@ public class StamWeightData {
     public static final Codec<StamWeightData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     Codec.FLOAT.fieldOf("weight").forGetter(StamWeightData::getCurrentWeight),
-                    Codec.FLOAT.fieldOf("stamina").forGetter(StamWeightData::getCurrentStamina)
+                    Codec.FLOAT.fieldOf("stamina").forGetter(StamWeightData::getCurrentStamina),
+                    Codec.DOUBLE.optionalFieldOf("endurance", DEFAULT_ENDURANCE).forGetter(StamWeightData::getEndurance)
             ).apply(instance, StamWeightData::new)
     );
 }

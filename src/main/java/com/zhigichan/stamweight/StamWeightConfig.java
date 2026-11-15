@@ -21,6 +21,7 @@ public class StamWeightConfig {
 
     // --- [survival] ---
     public static final ModConfigSpec.DoubleValue SURVIVAL_REGEN_DELTA;
+    public static final ModConfigSpec.DoubleValue SURVIVAL_ACTION_COST_MULTIPLIER;
     public static final ModConfigSpec.DoubleValue SURVIVAL_STAMINA_PER_POINT;
 
     // --- [overload_logic] ---
@@ -76,10 +77,14 @@ public class StamWeightConfig {
         SURVIVAL_REGEN_DELTA = BUILDER
                 .comment("Если <= 6 очков голода и жажды, применяется снижение скорости регенерации в очках (дефолт -0.15, стакаются)")
                 .defineInRange("regenDelta", -0.15, -100.0, 100.0);
+        SURVIVAL_ACTION_COST_MULTIPLIER = BUILDER
+                .comment("Множитель траты выносливости на замах и копание при <= 6 очков голода и жажды (дефолт 1.25, стакаются как +0.25, 1.0 = отключает)")
+                .defineInRange("actionCostMultiplier", 1.25, 0.0, 100.0);
         SURVIVAL_STAMINA_PER_POINT = BUILDER
                 .comment("После 6 очков голода и жажды за каждое отнятое очко снижается максимальная выносливость (дефолт -0.2, стакаются)")
                 .defineInRange("staminaPerPoint", -0.2, -100.0, 0.0);
         BUILDER.pop();
+
 
         // [логика]
         BUILDER.push("overload_logic");

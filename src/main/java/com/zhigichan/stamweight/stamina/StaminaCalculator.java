@@ -14,20 +14,24 @@ public class StaminaCalculator {
 
     public static double calculateDeltaPerTick(ServerPlayer player, boolean isSprinting, boolean isWalking) {
         double rate = player.getAttributeValue(ModAttributes.STAMINA_RATE);
+        // База атрибута = 1.0, поэтому (rate - 1.0) — это чистая сумма плоских дебаффов веса, голода и жажды
+        double flatDebuffs = rate - 1.0;
 
+        double baseAction;
         if (isSprinting) {
-            return StamWeightConfig.SPRINT_DELTA.get();
+            baseAction = StamWeightConfig.SPRINT_DELTA.get();
+        } else if (isWalking) {
+            baseAction = StamWeightConfig.WALK_DELTA.get();
+        } else {
+            baseAction = StamWeightConfig.IDLE_REGEN.get();
         }
 
-        if (isWalking) {
-            double walkBase = StamWeightConfig.WALK_DELTA.get();
-            double walkDelta = walkBase > 0.0 ? walkBase * rate : walkBase;
-            if (StamWeightConfig.WALK_FLOOR_ZERO.get() && walkDelta < 0.0) {
-                return 0.0;
-            }
-            return walkDelta;
+        double totalDelta = baseAction + flatDebuffs;
+
+        if (isWalking && !isSprinting && StamWeightConfig.WALK_FLOOR_ZERO.get() && totalDelta < 0.0) {
+            return 0.0;
         }
 
-        return StamWeightConfig.IDLE_REGEN.get() * rate;
+        return totalDelta;
     }
 }
